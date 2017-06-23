@@ -26,8 +26,6 @@ def create_kv(nametext,valuetext,tree):
  root.appendChild(property)
  property.appendChild(name)
  property.appendChild(value)
-# print name
-# print value
  return root
 
 def analysis_xml(component,doc):
@@ -109,10 +107,6 @@ def main():
    XML_DIR=os.path.join(os.path.join(os.environ['HADOOP_ROOT'],sys.argv[1]),"etc/hadoop/mapred-site.xml")
    write_xml(XML_DIR,doc)
 
-	#	print("start update conf")
-    #   print (sys.argv[1],sys.argv[2],sys.argv[3])
-    #   HADOOP_ROOT=os.environ['HADOOP_ROOT']
-    #   print HADOOP_ROOT
 		
 
 if __name__=='__main__':

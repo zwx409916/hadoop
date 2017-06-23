@@ -1,8 +1,10 @@
+#!/bin/bash
 CUR_DIR=$(cd `dirname $0`; pwd)
-source $CUR_DIR/config.properties 
+source $CUR_DIR/usrconf.properties
+
 . $CUR_DIR/process.sh
-basedir=`pwd`
-export HADOOP_ROOT=${TEST_HOME}/install/hadoop
+basedir=$CUR_DIR
+export HADOOP_ROOT=${BIGDATA_HOME}/install/hadoop
 
 startup_cluster(){
 for node in ${CLUSTER_NODES[@]}
@@ -15,9 +17,9 @@ for node in ${CLUSTER_NODES[@]}
   for process in ${arr[@]}
    do
     if [ $process = 'journalnode' ];then
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
      elif [ $process = 'zookeeper' ];then
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
     fi
    done      
  done
@@ -35,9 +37,9 @@ for node in ${CLUSTER_NODES[@]}
      elif [ $process = 'zookeeper' ];then
       echo $process
      elif [ $process = 'namenode' ];then
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh namenode_format $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh namenode_format $process $node $IP"
      else
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
     fi
    done
  done	
@@ -54,9 +56,9 @@ for node in ${CLUSTER_NODES[@]}
   for process in ${arr[@]}
    do
     if [ $process = 'journalnode' ];then
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
      elif [ $process = 'zookeeper' ];then
-      ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+      ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
     fi
    done
  done
@@ -74,7 +76,7 @@ for node in ${CLUSTER_NODES[@]}
     	 elif [ $process = 'zookeeper' ];then
      	  echo $process
 	 else
-	  ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh start_process $process $node $IP"
+	  ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh start_process $process $node $IP"
 	fi
         done      
 done	
@@ -90,7 +92,7 @@ for node in ${CLUSTER_NODES[@]}
         IFS=","
         for process in ${arr[@]}
         do
-         ssh root@${IP} "cd ${TEST_HOME} ;sh ./process.sh stop_process $process $node $IP"
+         ssh root@${IP} "cd ${BIGDATA_HOME} ;sh ./process.sh stop_process $process $node $IP"
         done
     done
 }
@@ -102,13 +104,13 @@ remove_cluster(){
 		IP=$(eval echo $`echo 'CLUSTER_'$node'_IP'` )
 		PWD=$(eval echo $`echo 'CLUSTER_'$node'_PWD'` )
 		echo "Remove cluster on $IP"
-		ssh ${USERNAME}@${IP} rm -rf ${TEST_HOME}			
+		ssh ${USERNAME}@${IP} rm -rf ${BIGDATA_HOME}			
 	done
 }
 
 install_all(){
-    rm -rf ${TEST_HOME}/install
-    mkdir -p ${TEST_HOME}/install
+    rm -rf ${BIGDATA_HOME}/install
+    mkdir -p ${BIGDATA_HOME}/install
     rm -rf ${TEMP_DIR}
     mkdir -p ${TEMP_DIR}
     mkdir ${HADOOP_ROOT}
@@ -134,10 +136,10 @@ for node in ${CLUSTER_NODES[@]}
 	ID=$(eval echo $`echo 'CLUSTER_'$node'_ID'` )
         IP=$(eval echo $`echo 'CLUSTER_'$node'_IP'` )
         PWD=$(eval echo $`echo 'CLUSTER_'$node'_PWD'` )
-	ssh ${USERNAME}@${IP} "mkdir -p ${TEST_HOME}; chown $USERNAME:users -R ${TEST_HOME}"
-	scp -r ${basedir}/* ${USERNAME}@${IP}:${TEST_HOME}
-	ssh ${USERNAME}@${IP} "cd ${TEST_HOME}; dos2unix *.sh ; chmod +x *"
-	ssh ${USERNAME}@${IP} "cd ${TEST_HOME} ;echo ${IP} ;sh ./install.sh remote $node $IP $ID "
+	ssh ${USERNAME}@${IP} "mkdir -p ${BIGDATA_HOME}; chown $USERNAME:users -R ${BIGDATA_HOME}"
+	scp -r ${basedir}/* ${USERNAME}@${IP}:${BIGDATA_HOME}
+	ssh ${USERNAME}@${IP} "cd ${BIGDATA_HOME}; dos2unix *.sh ; chmod +x *"
+	ssh ${USERNAME}@${IP} "cd ${BIGDATA_HOME} ;echo ${IP} ;sh ./install.sh remote $node $IP $ID "
     done
 }
 
@@ -149,6 +151,15 @@ install_cluster(){
         add_dn_dir
 	remote_setup
         IFS=$OLD_IFS
+}
+
+uninstall_cluster(){
+  stop_cluster
+  OLD_IFS=$IFS
+  IFS=","
+  remove_cluster
+  IFS=$OLD_IFS
+
 }
 
 
@@ -169,6 +180,8 @@ elif [ $input = 'remote' ];then
  install_all $2 $3 $4
 elif [ $input = 'stop' ];then
  stop_cluster
+elif [ $input = 'uninstall' ];then
+ uninstall_cluster
 fi
 IFS=$OLD_IFS
 

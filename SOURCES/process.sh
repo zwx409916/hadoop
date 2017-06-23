@@ -1,8 +1,11 @@
+#!/bin/bash
 CUR_DIR=$(cd `dirname $0`; pwd)
-source $CUR_DIR/config.properties
-export TEMP_DIR=${TEST_HOME}/install/temp
-export HADOOP_ROOT=${TEST_HOME}/install/hadoop
-export SPARK_ROOT=${TEST_HOME}/install/spark
+#source ${BIGDATA_HOME}/usrconf.properties
+#CUR_DIR=$(cd `dirname $0`; pwd)
+source $CUR_DIR/usrconf.properties
+export TEMP_DIR=${BIGDATA_HOME}/install/temp
+export HADOOP_ROOT=${BIGDATA_HOME}/install/hadoop
+export SPARK_ROOT=${BIGDATA_HOME}/install/spark
 export HADOOP_DAEMON=hadoop-daemon.sh
 export YARN_DAEMON=yarn-daemon.sh
 export ZKSERVER_SCRIPT=zkServer.sh
@@ -109,14 +112,14 @@ stop_zookeeper(){
 start_spark(){
 	if [ $2 = 'NODE1' ];then
 		echo "start $1 on $3"
-		sh ${TEST_HOME}/install/spark/sbin/start-all.sh
+		sh ${BIGDATA_HOME}/install/spark/sbin/start-all.sh
 	fi
 }
 
 stop_spark(){
 	if [ $2 = 'NODE1' ];then
 		echo "stop $1 on $3"
-		sh ${TEST_HOME}/install/spark/sbin/stop-all.sh
+		sh ${BIGDATA_HOME}/install/spark/sbin/stop-all.sh
 	fi
 }
 
@@ -141,8 +144,7 @@ namenode_format(){
 		sleep 5
 		sh ${HADOOP_ROOT}/namenode/bin/hdfs namenode -initializeSharedEdits -nonInteractive
 		sleep 5
-		echo node2,${CLUSTER_NODE2_IP}
-		scp -r ${TEST_HOME}/tmp root@${CLUSTER_NODE2_IP}:${TEST_HOME}/
+		scp -r ${BIGDATA_HOME}/tmp root@${CLUSTER_NODE2_IP}:${BIGDATA_HOME}/
 	fi
 	start_namenode $1 $2 $3 
 	sleep 5
@@ -187,8 +189,8 @@ install_spark(){
 
 extract_hadoop(){
 	#mkdir ${HADOOP_ROOT}
-	sh ${basedir}/untar.sh ${RELEASE_HOME}/${HADOOP_TAR} 
-	mv ${TEMP_DIR}/${HADOOP_VERSION} ${HADOOP_ROOT}/$1
+	sh ${basedir}/untar.sh ${BIGDATA_HOME}/hadoop-${HADOOP_VERSION}.tar.gz 
+	mv ${TEMP_DIR}/hadoop-${HADOOP_VERSION} ${HADOOP_ROOT}/$1
 	echo  > ${HADOOP_ROOT}/$1/etc/hadoop/slaves
 	chmod  777 ${HADOOP_ROOT}/$1/bin/*
 	chmod  777 ${HADOOP_ROOT}/$1/sbin/*
@@ -224,8 +226,8 @@ update_hadoop_conf(){
     export yarn_resourcemanager_webapp_address_rm2=${yarn_resourcemanager_webapp_address_rm2}
     export yarn_web_proxy_address=${yarn_web_proxy_address}
     export yarn_nodemanager_remote_app_log_dir=/tmp/logs
-    export mapred_local_dir=${TEST_HOME}/nmlocal
-	export yarn_nodemanager_log_dirs=${TEST_HOME}/nmlog
+    export mapred_local_dir=${BIGDATA_HOME}/nmlocal
+	export yarn_nodemanager_log_dirs=${BIGDATA_HOME}/nmlog
 	export mapreduce_jobhistory_address=${mapreduce_jobhistory_address}
 	export mapreduce_jobhistory_webapp_address=${mapreduce_jobhistory_webapp_address}
 
@@ -236,31 +238,32 @@ update_hadoop_conf(){
 
 extract_zookeeper(){
 	echo "setup zookeeper start"
-	mkdir ${TEST_HOME}/install/zookeeper
-	sh ${basedir}/untar.sh ${RELEASE_HOME}/${ZOOKEEPER_TAR}
-	mv ${TEMP_DIR}/${ZOOKEEPER_VERSION}/* ${TEST_HOME}/install/zookeeper
-	chmod 777 ${TEST_HOME}/install/zookeeper/bin/*	
+	mkdir ${BIGDATA_HOME}/install/zookeeper
+	sh ${basedir}/untar.sh ${BIGDATA_HOME}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz
+	mv ${TEMP_DIR}/zookeeper-${ZOOKEEPER_VERSION}/* ${BIGDATA_HOME}/install/zookeeper
+	chmod 777 ${BIGDATA_HOME}/install/zookeeper/bin/*	
 	echo $2 > ${zk_data_dir}/myid
 	echo "setup zookeeper completed"
 }
 
 update_zookeeper_conf(){
-	mv ${TEST_HOME}/install/zookeeper/conf/zoo_sample.cfg ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	echo "server.1=${CLUSTER_NODE1_IP}:2888:3888" >> ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	echo "server.2=${CLUSTER_NODE2_IP}:2888:3888" >> ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	echo "server.3=${CLUSTER_NODE3_IP}:2888:3888" >> ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	echo "maxSessionTimeout=600000" >> ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	sed -i "s,dataDir=/tmp/zookeeper,dataDir=${zk_data_dir},g" ${TEST_HOME}/install/zookeeper/conf/zoo.cfg
-	sed -i "s,zookeeper.log.dir=.,zookeeper.log.dir=,g" ${TEST_HOME}/install/zookeeper/conf/log4j.properties
-	chmod 777 ${TEST_HOME}/install/zookeeper/bin/*
+	mv ${BIGDATA_HOME}/install/zookeeper/conf/zoo_sample.cfg ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	echo "server.1=${CLUSTER_NODE1_IP}:2888:3888" >> ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	echo "server.2=${CLUSTER_NODE2_IP}:2888:3888" >> ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	echo "server.3=${CLUSTER_NODE3_IP}:2888:3888" >> ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	echo "maxSessionTimeout=600000" >> ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	sed -i "s,dataDir=/tmp/zookeeper,dataDir=${zk_data_dir},g" ${BIGDATA_HOME}/install/zookeeper/conf/zoo.cfg
+	sed -i "s,zookeeper.log.dir=.,zookeeper.log.dir=,g" ${BIGDATA_HOME}/install/zookeeper/conf/log4j.properties
+	chmod 777 ${BIGDATA_HOME}/install/zookeeper/bin/*
 }
 
 extract_spark(){
 	mkdir ${SPARK_ROOT}
-	sh ${basedir}/untar.sh ${RELEASE_HOME}/${SPARK_TAR}
-	mv ${TEMP_DIR}/${SPARK_VERSION}/* ${TEST_HOME}/install/spark
-	chmod 777 ${TEST_HOME}/install/spark/bin/*
-	chmod 777 ${TEST_HOME}/install/spark/sbin/*
+	version=${HADOOP_VERSION}
+	sh ${basedir}/untar.sh ${BIGDATA_HOME}/spark-${SPARK_VERSION}-bin-hadoop${version%.*}.tgz
+	mv ${TEMP_DIR}/spark-${SPARK_VERSION}-bin-hadoop${version%.*}/* ${BIGDATA_HOME}/install/spark
+	chmod 777 ${BIGDATA_HOME}/install/spark/bin/*
+	chmod 777 ${BIGDATA_HOME}/install/spark/sbin/*
 }
 
 update_spark_conf(){
@@ -270,12 +273,12 @@ update_spark_conf(){
 	sed -i "s,@SPARK_CLASSPATH@,${SPARK_ROOT}/lib/*,g" `grep -rl '@SPARK_CLASSPATH@' ${SPARK_ROOT}/conf/`
 	sed -i "s,@HADOOP_CONF_DIR@,${SPARK_ROOT}/conf,g" `grep -rl '@HADOOP_CONF_DIR@' ${SPARK_ROOT}/conf/`
 	sed -i "s,@SPARK_LOG_CONF_PATH@,${SPARK_ROOT}/conf,g" `grep -rl '@SPARK_LOG_CONF_PATH@' ${SPARK_ROOT}/conf/`
-	sed -i "s,@SPARK_DRIVER_LOG_PATH@,${TEST_HOME},g" `grep -rl '@SPARK_DRIVER_LOG_PATH@' ${SPARK_ROOT}/conf/`
+	sed -i "s,@SPARK_DRIVER_LOG_PATH@,${BIGDATA_HOME},g" `grep -rl '@SPARK_DRIVER_LOG_PATH@' ${SPARK_ROOT}/conf/`
 	sed -i "s,@YARN_JAR_PATH@,${SPARK_ROOT}/lib/*,g" `grep -rl '@YARN_JAR_PATH@' ${SPARK_ROOT}/conf/`
 	sed -i "s,@SPARK_HOME@,${SPARK_ROOT}/,g" `grep -rl '@SPARK_HOME@' ${SPARK_ROOT}/conf/`
-	sed -i "s,@SNAPPY_LIB_PATH@,${TEST_HOME}/install/hadoop/nodemanager/lib/native,g" `grep -rl '@SNAPPY_LIB_PATH@' ${SPARK_ROOT}/conf/`
+	sed -i "s,@SNAPPY_LIB_PATH@,${BIGDATA_HOME}/install/hadoop/nodemanager/lib/native,g" `grep -rl '@SNAPPY_LIB_PATH@' ${SPARK_ROOT}/conf/`
 	sed -i "s,@JAVA_HOME@,${JAVA_HOME},g" `grep -rl '@JAVA_HOME@' ${SPARK_ROOT}/conf/`
-#	cp ${RELEASE_HOME}/wc2frm-2.1.11.jar ${SPARK_ROOT}/lib
+#	cp ${BIGDATA_HOME}/wc2frm-2.1.11.jar ${SPARK_ROOT}/lib
 	export spark_shuffle_service_port=23050
 #	python ${basedir}/update.py $1 $2 $3 $4 
 #	python ${basedir}/updatexml.py $1

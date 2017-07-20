@@ -31,15 +31,15 @@ autoinstall hadoop
 %install
 cd %{_sourcedir}
 #install %{_sourcedir}/install.sh %{_builddir}/%{name}-%{version}/
-install -d %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/bigdataCache
-scp -r  %{_sourcedir}/* %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/bigdataCache
-#install  %{_sourcedir}/process.sh %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#install  %{_sourcedir}/install.sh %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#install  %{_sourcedir}/updatexml.py %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#install  %{_sourcedir}/conf.xml %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#install  %{_sourcedir}/config.properties %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#cp -r %{_sourcedir}/conf/ %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
-#install  %{SOURCE0} %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdataCache
+install -d %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/bigdata 
+scp -r  %{_sourcedir}/* %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/bigdata 
+#install  %{_sourcedir}/process.sh %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#install  %{_sourcedir}/install.sh %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#install  %{_sourcedir}/updatexml.py %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#install  %{_sourcedir}/conf.xml %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#install  %{_sourcedir}/config.properties %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#cp -r %{_sourcedir}/conf/ %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
+#install  %{SOURCE0} %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/run/new/bigdata/ 
 #cp %{_sourcedir}/install.sh %{_buildrootdir}/%{name}-%{version}-%{_arch}/
 #rm -rf $RPM_BUILD_ROOT
 #%make_install
@@ -47,26 +47,35 @@ scp -r  %{_sourcedir}/* %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}/
 
 %files 
 %defattr(-, root, root, -)
-/bigdataCache/*
+/bigdata/*
 
 
 
 %post
 exec 6<&0 0</dev/tty
-cd /bigdataCache/
+cd /bigdata/ 
 
 sh prepare.sh
 exec 0<&6 6<&-
 sh install.sh install
 sh install.sh startup
 
-#rm -rf /bigdataCache
+#rm -rf /bigdata/ 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %preun
-cd /bigdataCache/
-sh install.sh uninstall
+if[ -d "/bigdata" ] ; then
+ cd /bigdata 
+ if[ -d "userconf.properties" ] ; then
+  sh install.sh stop
+  sh install.sh uninstall
+ else
+  rm -rf /bigdata 
+ fi
+fi
+
+
 
 %changelog
